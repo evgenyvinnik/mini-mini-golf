@@ -1,0 +1,6 @@
+work/
+*.bat
+*_min*
+*.svg
+*.xcf
+*.zip
