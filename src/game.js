@@ -83,8 +83,6 @@ let // Various screens
   instructionScreenButtons,
   instructionsVisible,
   dontResetOnInstructionsClosed,
-  ATLAS, // Image containing particle images
-  particles = [], // Collection of particle effects
   thisFrame, // Dates used for calculating DeltaTime between `onEnterFrame events`
   lastFrame,
   DT, // Time elapsed (in milliseconds) since last the last `onEnterFrame` event
@@ -99,10 +97,6 @@ let // Various screens
   fadeInOutCounter, // Counter for fades between holes
   ballResetX,
   ballResetY, // Used for repositioning the ball when it has entered a water hazzard
-  clipX,
-  clipY,
-  clipW,
-  clipH, // Clip region for rendering
   ballInSand,
   friction,
   gameMode = MODE_TITLE, // Current game mode
@@ -1508,67 +1502,6 @@ let Vec2 = (x, y) => ({ x, y }),
   },
   // #endregion
 
-  // Create a new particle using the given parameters
-  newParticle = (
-    timeToLive,
-    x,
-    y,
-    direction,
-    speed,
-    fades,
-    alpha,
-    shrinks,
-    grows,
-    scale,
-    region,
-    clip = false
-  ) => {
-    particles.push({
-      timeToLive: timeToLive, // Time to live
-      counter: timeToLive, // Copy of above that is used for counting down
-
-      rotation: direction, // Rotation
-
-      velocityX: cos(direction) * speed, // Set valocity
-      velocityY: sin(direction) * speed,
-
-      x: x, // Position
-      y: y,
-
-      fades: fades, // Fading settings
-      alpha: alpha,
-      originalAlpha: alpha,
-
-      shrinks: shrinks, // Shrinking settings
-      grows: grows, // Growing settings
-
-      scale: scale, // Scale used for shrink / grow calculations
-      originalScale: scale,
-
-      clip: clip, // True if the particle imagery will be clipped to appear inside a specific rectangular region of the canvas where it is drawn
-
-      textureRegion: region, // TextureRegion
-      textureX: region[2] / 2, // Texture center coordinates
-      textureY: region[3] / 2,
-    });
-  },
-  // Spawn a sand particle at the ball's current position, moving in a random direction
-  // NOTE: The particle should probably move in the opposite direction of the ball, but..meh
-  spawnSand = () => {
-    newParticle(
-      0.5, // time to live
-      ball.C.x, // position
-      ball.C.y,
-      PI2 * M.random(), // direction
-      100, // speed
-      true, // fades
-      1, // alpha
-      true, // shrinks
-      false, // grows
-      1, // scale
-      [1, 1, 32, 32] // TextureRegion (x, y, w, h) - SAND
-    );
-  },
   // Reposition canvas and HUD elements
   repositionContent = () => {
     // Set the given elements style properties to update its position inside the browser window
@@ -1911,12 +1844,6 @@ D.onmouseup = (e) => {
 
       putterEnabled = false; // Prevent putter aiming
 
-      if (ball.inSand) {
-        // Is the ball currently in the sand?
-
-        spawnSand(); // Create a sand particle moving in a random direction
-      }
-
       ballResetPosition = ball.C; // Save position for edge cases where the ball escapes the confines of the hole
 
       let puttMagnitude = putterLength / MAX_PUTTER_LENGTH; // Get magnitude (0-1)
@@ -2067,8 +1994,6 @@ W.onload = () => {
     })
   );
 
-  ATLAS = getByID("i"); // Get the image from the HTML document, which contains particle imagery
-
   //
   // Create HTML canvasses and attach them to the document body
   //
@@ -2121,15 +2046,12 @@ let checkResolveHazzardCollisions = () => {
         if (hazzard.type === SAND_HAZZARD) {
           // Is it a sand hazzard?
           if (!ball.inSand) {
-            spawnSand(); // Spawn a sand particle at the ball's position
-
             gameState.beached++; // Increment number of times the ball ended up in a sand hazzard
           }
 
           ball.inSand = true; // The ball is currently inside a sand hazzard
 
           // if (!ball.inSand) { // Ball currently not in sand?
-          //   spawnSand(); // Spawn a sand particle at the ball's position
 
           //   ball.inSand = true; // The ball is in a sand hazzard
 
@@ -2149,55 +2071,23 @@ let checkResolveHazzardCollisions = () => {
             case 1:
               ballResetX = hazzard.x + halfCell; // Calculate position where ball will be placed outside of the water hazzard
               ballResetY = hazzard.y - 8;
-              clipX = hazzard.x; // Calculate clipping rect to constrain water particle to the hazzards area
-              clipY = hazzard.y;
-              clipW = oneCell;
-              clipH = halfCell;
               break;
 
             case 2:
               ballResetX = hazzard.x + oneCell + 8;
               ballResetY = hazzard.y + halfCell;
-              clipX = hazzard.x + halfCell;
-              clipY = hazzard.y;
-              clipW = halfCell;
-              clipH = oneCell;
               break;
 
             case 4:
               ballResetX = hazzard.x + halfCell;
               ballResetY = hazzard.y + oneCell + 8;
-              clipX = hazzard.x;
-              clipY = hazzard.y + halfCell;
-              clipW = oneCell;
-              clipH = halfCell;
               break;
 
             default: // Otherwise it can only be 8
               ballResetX = hazzard.x - 8;
               ballResetY = hazzard.y + halfCell;
-              clipX = hazzard.x;
-              clipY = hazzard.y;
-              clipW = halfCell;
-              clipH = oneCell;
               break;
           } // End "`hazzard.bitMask` switch"
-
-          // Create a water ripple particle effect
-          newParticle(
-            0.5, // timeToLive
-            ball.C.x, // x
-            ball.C.y,
-            0, // direction
-            0, // speed
-            true, // fades
-            1, // alpha
-            false, // shrinks
-            true, // grows
-            8, // scale
-            [36, 1, 26, 26], // TextureRegion (x, y, w, h) WATER
-            true // clip
-          );
 
           ball.C = Vec2(ballResetX, ballResetY); // Reposition ball outside water hazzard
           ball.V = Vec2(0, 0); // Set velocity
@@ -2396,25 +2286,6 @@ let checkResolveHazzardCollisions = () => {
             if (gameState.putts === 1) {
               // Did the player score a "hole in one"?
 
-              // Create a circle of star particles
-              let d = 0; // Start direction
-              for (let i = 0; i < 9; i++) {
-                newParticle(
-                  1.5, // time to live
-                  goal.C.x, // position
-                  goal.C.y,
-                  d, // direction
-                  125, // speed
-                  true, // fades
-                  1, // alpha
-                  false, // shrinks
-                  false, // grows
-                  1, // scale
-                  [63, 1, 24, 23] // TextureRegion (x, y, w, h) STAR
-                );
-                d += PI2 / 9;
-              }
-
               gameState.holesInOne++; // Increment number of times the player got a hole in one
               statUpdateRequired = true;
             } else {
@@ -2540,68 +2411,6 @@ let checkResolveHazzardCollisions = () => {
         OBJ_CTX.restore(); // Restore the context state for the next object
       } // End "object draw" check
     } // End "object draw" loop
-
-    //
-    // Update and draw particles
-    //
-
-    for (let i = particles.length - 1; i >= 0; i--) {
-      // Iterate backwards through the array so that removing particles will not cause `array.length` related issues
-
-      let particle = particles[i]; // Next particle
-
-      particle.counter -= DT; // Decrement particles remaining life
-
-      if (particle.counter <= 0) {
-        // Has the particle expired?
-
-        particles.splice(i, 1); // Remove the particle
-      } else {
-        // The particle has NOT expired, so update it's state and draw it
-
-        particle.x += particle.velocityX * DT; // Update position
-        particle.y += particle.velocityY * DT;
-
-        // ratio = 1/particle.timeToLive * particle.counter; // Scaling ratio
-        ratio = particle.counter / particle.timeToLive; // Scaling ratio
-
-        if (particle.fades) particle.alpha = particle.originalAlpha * ratio; // Scale alpha
-        if (particle.shrinks) particle.scale = particle.originalScale * ratio; // Scale size
-        if (particle.grows)
-          particle.scale =
-            particle.originalScale - particle.originalScale * ratio; // Scale size
-
-        OBJ_CTX.save(); // Save context
-
-        if (particle.clip) {
-          // Does the imagery need to be constrained to appear inside a specific rectangular area of the canvas?
-
-          OBJ_CTX.beginPath(); // Clip it!
-          OBJ_CTX.rect(clipX, clipY, clipW, clipH);
-          OBJ_CTX.clip();
-        } // End "imagery requires clip" check
-
-        OBJ_CTX.globalAlpha = particle.alpha; // Set opacity
-
-        OBJ_CTX.translate(particle.x, particle.y); // Apply transformations
-        OBJ_CTX.scale(particle.scale, particle.scale);
-        OBJ_CTX.rotate(particle.rotation);
-
-        OBJ_CTX.drawImage(
-          ATLAS,
-          particle.textureRegion[0],
-          particle.textureRegion[1],
-          particle.textureRegion[2],
-          particle.textureRegion[3],
-          -particle.textureX,
-          -particle.textureY,
-          particle.textureRegion[2],
-          particle.textureRegion[3]
-        ); // Draw the image
-
-        OBJ_CTX.restore(); // restore context
-      } // End "particle expired" check
-    } // End "update and draw particles" loop
 
     if (statUpdateRequired) {
       // Did any of the players statistics change this frame?
