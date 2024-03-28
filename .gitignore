@@ -4,3 +4,4 @@ work/
 *.svg
 *.xcf
 *.zip
+.DS_Store
