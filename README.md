@@ -17,6 +17,12 @@ Easy to operate:
 - Release the left mouse button to make your putt.
 - Hold the shift key to show your statistics.
 
-## Technologies
+## Technologies to minify
 
-[Terser](https://terser.org/) was used to minify the JavaScript code.
+For JavaScript code: https://terser.org/
+For CSS: https://csscompressor.net/
+For HTML: https://mj.olnir.com/tools/minifier/
+
+
+# Video demo:
+https://www.youtube.com/watch?v=HME9b2U3xfk
