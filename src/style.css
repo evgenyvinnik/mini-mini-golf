@@ -14,14 +14,15 @@
 
 /* Default HTML */
 html {
-  font-family: "Bradley Hand ITC", "Bradley Hand Bold"; /* Fonts should hopefully be the same on Windows and MacOS */
-  line-height: 2.0em;
+  font-family: "Roboto"; /* Fonts should hopefully be the same on Windows and MacOS */
+  line-height: 2em;
   background-color: #7bb87b;
   overflow: hidden;
 }
 
 /* Foreground canvas */
-#fg, #hud {
+#fg,
+#hud {
   left: 0;
   top: 0;
 }
@@ -29,9 +30,9 @@ html {
 /* buttons */
 .btn {
   margin-top: 1em;
-  margin-left: .1em;
-  margin-right: .1em;
-  padding: .1em .5em;
+  margin-left: 0.1em;
+  margin-right: 0.1em;
+  padding: 0.1em 0.5em;
   display: inline-block;
   width: 2em;
   height: 1em;
@@ -44,7 +45,7 @@ html {
 
 /* Button pressed down */
 .btn:active {
-  transform: scale(.9);
+  transform: scale(0.9);
 }
 
 /* Invisible */
@@ -53,14 +54,18 @@ html {
 }
 
 /* Stat and reset screens */
-#ss, #rs {
+#ss,
+#rs {
   border-top: 4px solid #9b9;
   background-color: #595;
   border-bottom: 4px solid #373;
 }
 
 /* Title screen, stat screen, reset screen, and instruction screen */
-#ts, #is, #ss, #rs {
+#ts,
+#is,
+#ss,
+#rs {
   width: 100%;
   z-index: 1000;
   top: 50%;
@@ -70,7 +75,14 @@ html {
 }
 
 /* A bunch of elements are positioned absolutely */
-#bg, #fg, #hud, #ts, #is, #ss, #rs, .h {
+#bg,
+#fg,
+#hud,
+#ts,
+#is,
+#ss,
+#rs,
+.h {
   position: absolute;
 }
 
@@ -87,13 +99,13 @@ h3 {
 /* Title > DIE */
 h4 {
   font-size: 25em;
-  line-height: .6em;
+  line-height: 0.6em;
 }
 
 /* Title > An Antix Development production for js13k 2022 */
 h5 {
   font-size: 1.7em;
-  line-height: .7em;
+  line-height: 0.7em;
 }
 
 /* HUD text element title */

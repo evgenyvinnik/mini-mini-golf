@@ -30,7 +30,7 @@ const launchTime = Date.now(),
   D = document,
   W = window,
   STORAGE = W.localStorage,
-  SAVEFILE_NAME = "com.antix.ptyd", // Namespace for localstorage operations
+  SAVEFILE_NAME = "io.github.evgenyvinnik", // Namespace for localstorage operations
   M = Math,
   PI = M.PI,
   PI2 = M.PI * 2,
@@ -43,20 +43,20 @@ const launchTime = Date.now(),
   hypot = M.hypot,
   min = M.min,
   abs = M.abs,
-  PATH_NORTH = 1, // Directions for node bitmasks (search for "angry fish adventures in bitmasking" on the wayback machine or the internet archive)
-  PATH_SOUTH = 4,
-  PATH_EAST = 2,
-  PATH_WEST = 8,
+  P_N = 1, // Directions for node bitmasks (search for "angry fish adventures in bitmasking" on the wayback machine or the internet archive)
+  P_S = 4,
+  P_E = 2,
+  P_W = 8,
   MIN_PUTTER_LENGTH = 25, // If the putter length is less than this value, releasing the mouse will NOT initiate a new putt
-  MAX_PUTTER_LENGTH = 400, // Maximum length of the putter shaft
-  MAX_BALL_SPEED = 700, // Maximum speed the ball can travel at
+  M_P_L = 400, // Maximum length of the putter shaft
+  M_B_S = 700, // Maximum speed the ball can travel at
   HOLE_RADIUS = 12, // Radius of the goal hole
   WATER_HAZZARD = 0, // Hazzard types
-  SAND_HAZZARD = 1,
-  WALL_THICKNESS = 8,
-  BORDER_THICKNESS = 4;
+  S_H = 1,
+  W_T = 8,
+  B_T = 4;
 
-(MODE_NONE = 0), // Game modes
+(M_N = 0), // Game modes
   (MODE_TITLE = 1),
   (MODE_INSTRUCTIONS = 2),
   (MODE_PLAY = 3),
@@ -73,14 +73,14 @@ const launchTime = Date.now(),
 //
 
 let // Various screens
-  statsScreen,
-  titleScreen,
-  titleScreenButtons,
+  stats,
+  title,
+  titleButtons,
   hudScreen,
-  resetScreen,
-  resetScreenButtons,
-  instructionScreen,
-  instructionScreenButtons,
+  rS,
+  rSButtons,
+  iS,
+  iSButtons,
   instructionsVisible,
   dontResetOnInstructionsClosed,
   thisFrame, // Dates used for calculating DeltaTime between `onEnterFrame events`
@@ -152,7 +152,7 @@ let getByID = (id) => document.getElementById(id),
   // Set the game mode
   setMode = (mode) => {
     gameMode = mode;
-    //console.log(`gameMode changed to ${['MODE_NONE', 'MODE_TITLE', 'MODE_INSTRUCTIONS', 'MODE_PLAY', 'MODE_FADE_OUT', 'MODE_FADE_IN'][mode]}`);
+    //console.log(`gameMode changed to ${['M_N', 'MODE_TITLE', 'MODE_INSTRUCTIONS', 'MODE_PLAY', 'MODE_FADE_OUT', 'MODE_FADE_IN'][mode]}`);
   },
   // Create a new button with the given label and onclick function
   newButton = (label, onclick) => {
@@ -776,12 +776,12 @@ let Vec2 = (x, y) => ({ x, y }),
 
           // The path can advance east.
           includeNodeInPath(node); // Set current node as part of path.
-          openNodeWall(node, PATH_EAST); // Open east wall at current position.
+          openNodeWall(node, P_E); // Open east wall at current position.
 
           pathX++;
 
           getNode(); // New current node is the node to east of the curent cell.
-          openNodeWall(node, PATH_WEST); // Open west wall to previous cell.
+          openNodeWall(node, P_W); // Open west wall to previous cell.
           pathLength++;
         } else {
           // Path cannot advance any further east, force south
@@ -796,12 +796,12 @@ let Vec2 = (x, y) => ({ x, y }),
 
           // The path can advance west.
           includeNodeInPath(node); // Set current node as part of path.
-          openNodeWall(node, PATH_WEST); // Open east wall at current position.
+          openNodeWall(node, P_W); // Open east wall at current position.
 
           pathX--;
 
           getNode(); // New current node is the node to west of the curent cell.
-          openNodeWall(node, PATH_EAST); // Open east wall to previous cell.
+          openNodeWall(node, P_E); // Open east wall to previous cell.
           pathLength++;
         } else {
           // Path cannot advance any further west, force south
@@ -816,12 +816,12 @@ let Vec2 = (x, y) => ({ x, y }),
 
           // The path can advance south.
           includeNodeInPath(node); // Set current node as part of path.
-          openNodeWall(node, PATH_SOUTH); // Open south wall at current position.
+          openNodeWall(node, P_S); // Open south wall at current position.
 
           pathY++;
 
           getNode(); // New current node is the node to south of the curent cell.
-          openNodeWall(node, PATH_NORTH); // Open north wall to previous cell.
+          openNodeWall(node, P_N); // Open north wall to previous cell.
           pathLength++;
 
           chooseRandomPathDirection();
@@ -1054,10 +1054,10 @@ let Vec2 = (x, y) => ({ x, y }),
           if (row[c].partOfPath) {
             // Only check if the current node is part of the main path
 
-            if (c > 0) checkAndAddCandidate(row[c - 1], PATH_EAST); // Only check if there is a node to the west
-            if (c < maxX) checkAndAddCandidate(row[c + 1], PATH_WEST); // Only check if there is a node to the east
-            if (r > 0) checkAndAddCandidate(nodes[r - 1][c], PATH_SOUTH); // Only check if there is a node to the north
-            if (r < maxY) checkAndAddCandidate(nodes[r + 1][c], PATH_NORTH); // Only check if there is a node to the south
+            if (c > 0) checkAndAddCandidate(row[c - 1], P_E); // Only check if there is a node to the west
+            if (c < maxX) checkAndAddCandidate(row[c + 1], P_W); // Only check if there is a node to the east
+            if (r > 0) checkAndAddCandidate(nodes[r - 1][c], P_S); // Only check if there is a node to the north
+            if (r < maxY) checkAndAddCandidate(nodes[r + 1][c], P_N); // Only check if there is a node to the south
           } // End "node is part of main path" check
         } // End column loop
       } // End row loop
@@ -1106,28 +1106,28 @@ let Vec2 = (x, y) => ({ x, y }),
 
             // Open walls and set way forward according to the direction to the next path node from this extra node
             switch (node.extraDirection) {
-              case PATH_NORTH: // 1
+              case P_N: // 1
                 //console.log(`case:north (1) generating extra at r:${node.row} c:${node.col}`);
-                openNodeWall(nodes[node.row - 1][node.col], PATH_SOUTH); // Other node
-                openNodeWall(node, PATH_NORTH); // This node
+                openNodeWall(nodes[node.row - 1][node.col], P_S); // Other node
+                openNodeWall(node, P_N); // This node
                 break;
 
-              case PATH_SOUTH: // 4
+              case P_S: // 4
                 //console.log(`case:south (4) generating extra at r:${node.row} c:${node.col}`);
-                openNodeWall(nodes[node.row + 1][node.col], PATH_NORTH);
-                openNodeWall(node, PATH_SOUTH);
+                openNodeWall(nodes[node.row + 1][node.col], P_N);
+                openNodeWall(node, P_S);
                 break;
 
-              case PATH_EAST: // 2
+              case P_E: // 2
                 //console.log(`case:east (2) generating extra at r:${node.row} c:${node.col}`);
-                openNodeWall(nodes[node.row][node.col + 1], PATH_WEST);
-                openNodeWall(node, PATH_EAST);
+                openNodeWall(nodes[node.row][node.col + 1], P_W);
+                openNodeWall(node, P_E);
                 break;
 
-              default: // The only other direction possible is PATH_WEST (8)
+              default: // The only other direction possible is P_W (8)
                 //console.log(`case:west (8) generating extra at r:${node.row} c:${node.col}`);
-                openNodeWall(nodes[node.row][node.col - 1], PATH_EAST);
-                openNodeWall(node, PATH_WEST);
+                openNodeWall(nodes[node.row][node.col - 1], P_E);
+                openNodeWall(node, P_W);
                 break;
             } // End direction switch
           } // End "no adjacent extra nodes" check
@@ -1218,7 +1218,7 @@ let Vec2 = (x, y) => ({ x, y }),
               // Create a sand hazzard and fill the background at its coordinates with the correct colored grid to represent sand
               //
 
-              generateHazzard(SAND_HAZZARD, "a95", "ba6");
+              generateHazzard(S_H, "a95", "ba6");
             }
           } else {
             // This node is a grass node
@@ -1325,19 +1325,19 @@ let Vec2 = (x, y) => ({ x, y }),
           let lineLeft = (l = 0) => {
               Rectangle(
                 Vec2(x + l, y + halfCell),
-                WALL_THICKNESS,
+                W_T,
                 oneCell + 4,
                 0,
                 1,
                 1
               ); // l
-              fillRectBG(x - 2 + l, y - 1, BORDER_THICKNESS, oneCell + 1);
+              fillRectBG(x - 2 + l, y - 1, B_T, oneCell + 1);
             },
             // The same, but for the right side
             lineRight = (r = 0) => {
               Rectangle(
                 Vec2(x + oneCell + r, y + halfCell - 1),
-                WALL_THICKNESS,
+                W_T,
                 oneCell + 2,
                 0,
                 1,
@@ -1346,7 +1346,7 @@ let Vec2 = (x, y) => ({ x, y }),
               fillRectBG(
                 x + oneCell + r - 4,
                 y - 1,
-                BORDER_THICKNESS,
+                B_T,
                 oneCell + 1
               );
             },
@@ -1355,18 +1355,18 @@ let Vec2 = (x, y) => ({ x, y }),
               Rectangle(
                 Vec2(x + halfCell, y + 2 + t),
                 oneCell,
-                WALL_THICKNESS,
+                W_T,
                 0,
                 1,
                 1
               ); // t
-              fillRectBG(x - 2, y - 2 + t, oneCell, BORDER_THICKNESS);
+              fillRectBG(x - 2, y - 2 + t, oneCell, B_T);
             },
             lineBottom = (b = 0) => {
               Rectangle(
                 Vec2(x + halfCell, y + oneCell + b + 2),
                 oneCell,
-                WALL_THICKNESS,
+                W_T,
                 0,
                 1,
                 1
@@ -1375,7 +1375,7 @@ let Vec2 = (x, y) => ({ x, y }),
                 x - 2,
                 y - 2 + oneCell + b,
                 oneCell + 2,
-                BORDER_THICKNESS
+                B_T
               );
             };
 
@@ -1579,7 +1579,7 @@ let Vec2 = (x, y) => ({ x, y }),
 
       // //console.log(`game state created`);
 
-      showElement(titleScreen, true); // Show title screen (on first run)
+      showElement(title, true); // Show title screen (on first run)
 
       return false;
     } else {
@@ -1595,12 +1595,12 @@ let Vec2 = (x, y) => ({ x, y }),
 
       switch (gameState.mode) {
         case MODE_TITLE:
-          showElement(titleScreen, true);
+          showElement(title, true);
           setMode(MODE_TITLE);
           break;
 
         case MODE_INSTRUCTIONS:
-          showElement(instructionScreen, true);
+          showElement(iS, true);
           setMode(MODE_INSTRUCTIONS);
           break;
 
@@ -1649,7 +1649,7 @@ let Vec2 = (x, y) => ({ x, y }),
               ball.V = Vec2(0, 0); // Stop the ball
 
               setOpacity(0); // Essentially make the entire document contents invisible
-              setMode(MODE_NONE);
+              setMode(M_N);
 
               nextHole(); // Advance to the next hole
             } else {
@@ -1791,7 +1791,7 @@ D.onmousemove = (e) => {
       // Set putter color according to it's length
       (putterColor = "fff");
 
-    if (putterLength > MAX_PUTTER_LENGTH) putterLength = MAX_PUTTER_LENGTH; // Constrain length
+    if (putterLength > M_P_L) putterLength = M_P_L; // Constrain length
 
     x = cos(pa) * putterLength + sx; // Generate constrained end of shaft coordinates
     y = sin(pa) * putterLength + sy;
@@ -1846,11 +1846,11 @@ D.onmouseup = (e) => {
 
       ballResetPosition = ball.C; // Save position for edge cases where the ball escapes the confines of the hole
 
-      let puttMagnitude = putterLength / MAX_PUTTER_LENGTH; // Get magnitude (0-1)
+      let puttMagnitude = putterLength / M_P_L; // Get magnitude (0-1)
 
       ball.V = Vec2(
-        cos(puttAngle) * (puttMagnitude * MAX_BALL_SPEED),
-        sin(puttAngle) * (puttMagnitude * MAX_BALL_SPEED)
+        cos(puttAngle) * (puttMagnitude * M_B_S),
+        sin(puttAngle) * (puttMagnitude * M_B_S)
       ); // Set the balls velocity
 
       putterLength = 0; // Set to 0 to stop phantom putts
@@ -1877,7 +1877,7 @@ D.onkeyup = (e) => {
         break;
 
       case 16: // SHIFT key released?
-        showElement(statsScreen, false); // Hide the stats screen
+        showElement(stats, false); // Hide the stats screen
         statsVisible = false;
         e.preventDefault();
         break;
@@ -1885,13 +1885,13 @@ D.onkeyup = (e) => {
       case 8: // BACKSPACE key released?
         resetPutter();
         putterEnabled = false;
-        showElement(resetScreen, true);
+        showElement(rS, true);
         e.preventDefault();
         break;
 
       case 192: // TILDE key released?
         resetPutter();
-        showElement(instructionScreen, true);
+        showElement(iS, true);
         instructionsVisible = true;
         dontResetOnInstructionsClosed = true;
         e.preventDefault();
@@ -1912,7 +1912,7 @@ D.onkeydown = (e) => {
 
     updateStatPage();
 
-    showElement(statsScreen, true);
+    showElement(stats, true);
 
     secondCounter = 0; // Reset counter for live elapsed play time
     statsVisible = true;
@@ -1933,32 +1933,32 @@ W.onload = () => {
   // Get various screens
   //
 
-  statsScreen = getByID("ss");
-  titleScreen = getByID("ts");
-  titleScreenButtons = getByID("tsb");
+  stats = getByID("ss");
+  title = getByID("ts");
+  titleButtons = getByID("tsb");
   hudScreen = getByID("hud");
-  resetScreen = getByID("rs");
-  resetScreenButtons = getByID("rsb");
-  instructionScreen = getByID("is");
-  instructionScreenButtons = getByID("isb");
+  rS = getByID("rs");
+  rSButtons = getByID("rsb");
+  iS = getByID("is");
+  iSButtons = getByID("isb");
 
   //
   // Create menu buttons
   //
 
-  titleScreenButtons.appendChild(
+  titleButtons.appendChild(
     newButton("OK", () => {
       // Close title screen button
-      showElement(titleScreen, false); // Hide title screen
+      showElement(title, false); // Hide title screen
       setMode(MODE_INSTRUCTIONS); // Set mode
-      showElement(instructionScreen, true); // Show instruction screen
+      showElement(iS, true); // Show instruction screen
     })
   );
 
-  instructionScreenButtons.appendChild(
+  iSButtons.appendChild(
     newButton("OK", () => {
       // Close instructions screen button
-      showElement(instructionScreen, false); // Hide instruction screen
+      showElement(iS, false); // Hide instruction screen
 
       instructionsVisible = false;
 
@@ -1976,20 +1976,20 @@ W.onload = () => {
     })
   );
 
-  resetScreenButtons.appendChild(
+  rSButtons.appendChild(
     newButton("YES", () => {
       // Confirm reset button
-      showElement(resetScreen, false);
+      showElement(rS, false);
       W.onbeforeunload = null; // Stop the gamestate being saved, which would cause the game to not fully reset
       STORAGE.removeItem(SAVEFILE_NAME); // Remove the local data
       location.reload(); // Reload!
     })
   );
 
-  resetScreenButtons.appendChild(
+  rSButtons.appendChild(
     newButton("NO", () => {
       // Cancel reset button
-      showElement(resetScreen, false);
+      showElement(rS, false);
       putterEnabled = true;
     })
   );
@@ -2043,7 +2043,7 @@ let checkResolveHazzardCollisions = () => {
 
         // The ball has entered a hazzard. Determine which type of hazzard the ball has entered and resolve accordingly
 
-        if (hazzard.type === SAND_HAZZARD) {
+        if (hazzard.type === S_H) {
           // Is it a sand hazzard?
           if (!ball.inSand) {
             gameState.beached++; // Increment number of times the ball ended up in a sand hazzard
@@ -2334,7 +2334,7 @@ let checkResolveHazzardCollisions = () => {
           // Fade out completed?
           fadeInOutCounter = 0; // Set for completely invisible
 
-          setMode(MODE_NONE);
+          setMode(M_N);
 
           nextHole(); // Generate the next hole
         } // End "fade completed" check
@@ -2363,7 +2363,7 @@ let checkResolveHazzardCollisions = () => {
 
         break; // End "MODE_FADE_IN" case
 
-      default: // MODE_NONE
+      default: // M_N
         break;
     } // End "`gameMode` switch"
 
